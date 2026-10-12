@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dads &amp; Minis — weekend ideas</title>
 <script src="./support.js"></script>
 </head>
@@ -170,43 +171,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #b030
 </div>
 
 <div style="background: #fffdfa; color: #241a1d; border-radius: 8px; box-shadow: 0 6px 20px -6px rgba(36,26,29,0.16); padding: 28px; display: flex; flex-direction: column; gap: 18px">
-<sc-if value="{{notDone}}" hint-placeholder-val="{{true}}">
-<div style="display: flex; flex-direction: column; gap: 18px">
-<div style="display: flex; flex-direction: column; gap: 6px">
-<label for="dm-name" style="font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: #7a6b67">First name</label>
-<input id="dm-name" type="text" autocomplete="given-name" value="{{name}}" onChange="{{onName}}" style="min-height: 44px; padding: 0 14px; border: 1px solid #d8c9b6; border-radius: 2px; background: #fffdfa; font-family: Jost, sans-serif; font-size: 16px; color: #241a1d">
-</div>
-<div style="display: flex; flex-direction: column; gap: 6px">
-<label for="dm-email" style="font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: #7a6b67">Email</label>
-<input id="dm-email" type="email" autocomplete="email" required="" value="{{email}}" onChange="{{onEmail}}" style="min-height: 44px; padding: 0 14px; border: 1px solid #d8c9b6; border-radius: 2px; background: #fffdfa; font-family: Jost, sans-serif; font-size: 16px; color: #241a1d">
-</div>
-<div role="group" aria-label="Your kids' ages" style="display: flex; flex-direction: column; gap: 10px">
-<span style="font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: #7a6b67">Your minis are</span>
-<div style="display: flex; flex-wrap: wrap; gap: 10px">
-<sc-for list="{{ages}}" as="a" hint-placeholder-count="3">
-<sc-if value="{{a.on}}" hint-placeholder-val="{{false}}">
-<button type="button" aria-pressed="true" onClick="{{a.toggle}}" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid #b03060; background: #b03060; color: #fbf8f2; font-family: Jost, sans-serif; font-size: 14px; letter-spacing: 0.06em; cursor: pointer">{{a.label}}</button>
-</sc-if>
-<sc-if value="{{a.off}}" hint-placeholder-val="{{true}}">
-<button type="button" aria-pressed="false" onClick="{{a.toggle}}" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid #d8c9b6; background: transparent; color: #241a1d; font-family: Jost, sans-serif; font-size: 14px; letter-spacing: 0.06em; cursor: pointer">{{a.label}}</button>
-</sc-if>
-</sc-for>
-</div>
-</div>
-<sc-if value="{{hasError}}" hint-placeholder-val="{{false}}">
-<p role="alert" style="margin: 0; font-size: 14px; color: #96284f">That email doesn't look right. Mind checking it?</p>
-</sc-if>
-<button type="button" onClick="{{submit}}" style="min-height: 50px; border: none; border-radius: 2px; background: #b03060; color: #fbf8f2; font-family: Jost, sans-serif; font-size: 15px; font-weight: 500; letter-spacing: 0.06em; cursor: pointer">Send me Thursdays →</button>
-<p style="margin: 0; font-size: 13px; line-height: 1.4; color: #7a6b67">One email a week. We never share your address.</p>
-</div>
-</sc-if>
-<sc-if value="{{done}}" hint-placeholder-val="{{false}}">
-<div style="display: flex; flex-direction: column; gap: 14px; padding: 14px 0">
-<div style="font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: #96284f">You're on the list</div>
-<h3 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; font-size: 28px; line-height: 1.2">See you <em>Thursday</em>, {{greetName}}.</h3>
-<p style="margin: 0; font-size: 15px; line-height: 1.5; color: #4a3c3a">The first list arrives on Thursday 15 October, before lunch.</p>
-</div>
-</sc-if>
+<div id="dm-signup" style="min-height: 60px"></div>
+<p style="margin: 0; font-size: 13px; line-height: 1.4; color: #7a6b67">One email a week, every Thursday. We never share your address.</p>
 </div>
 </div>
 </section>
@@ -225,7 +191,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #b030
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { cat: 'all', ages: {}, name: '', email: '', done: false, error: false };
+    this.state = { cat: 'all' };
   }
   renderVals() {
     var self = this;
@@ -253,30 +219,32 @@ class Component extends DCLogic {
     var filters = filterDefs.map(function (f) {
       return { label: f[1], on: s.cat === f[0], off: s.cat !== f[0], pick: function () { self.setState({ cat: f[0] }); } };
     });
-    var ages = ['5–7', '8–10', '11–12'].map(function (l) {
-      var on = !!s.ages[l];
-      return { label: l, on: on, off: !on, toggle: function () { var a = Object.assign({}, self.state.ages); a[l] = !a[l]; self.setState({ ages: a }); } };
-    });
     return {
       filters: filters,
       shown: shown,
-      countLabel: 'Showing ' + shown.length + ' of ' + events.length,
-      ages: ages,
-      name: s.name,
-      email: s.email,
-      onName: function (ev) { self.setState({ name: ev.target.value }); },
-      onEmail: function (ev) { self.setState({ email: ev.target.value, error: false }); },
-      submit: function () {
-        var ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(self.state.email || '');
-        self.setState(ok ? { done: true, error: false } : { error: true });
-      },
-      hasError: s.error,
-      done: s.done,
-      notDone: !s.done,
-      greetName: s.name ? s.name : 'then'
+      countLabel: 'Showing ' + shown.length + ' of ' + events.length
     };
   }
 }
+</script>
+<script>
+// The page engine draws the sign-up card after load (and may redraw it),
+// so add the beehiiv form whenever the card is on screen without it.
+(function () {
+  function place() {
+    var box = document.getElementById('dm-signup');
+    if (!box || box.querySelector('script[data-beehiiv-form]')) return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://subscribe-forms.beehiiv.com/v3/loader.js';
+    s.setAttribute('data-beehiiv-form', 'f800a961-e7e8-4b2e-9c6b-0ba33247add2');
+    box.appendChild(s);
+  }
+  window.addEventListener('load', function () {
+    new MutationObserver(place).observe(document.body, { childList: true, subtree: true });
+    setTimeout(place, 300);
+  });
+})();
 </script>
 </body>
 </html>
